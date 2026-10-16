@@ -92,7 +92,47 @@ def test_saved_file_is_readable_json(store):
 
     data = json.loads(store.path.read_text(encoding="utf-8"))
 
-    assert data == [{"id": 1, "title": "Write report", "done": False}]
+    assert data == [
+        {"id": 1, "title": "Write report", "done": False, "priority": "medium"}
+    ]
+
+
+def test_new_task_defaults_to_medium_priority(store):
+    task = store.add("Write report")
+
+    assert task.priority == "medium"
+
+
+@pytest.mark.parametrize("priority", ["low", "medium", "high"])
+def test_add_accepts_valid_priorities(store, priority):
+    task = store.add("Write report", priority)
+
+    assert task.priority == priority
+    assert store.load()[0].priority == priority
+
+
+def test_add_normalizes_priority_case_and_whitespace(store):
+    task = store.add("Write report", "  HIGH ")
+
+    assert task.priority == "high"
+
+
+def test_add_rejects_invalid_priority(store):
+    with pytest.raises(ValueError, match="Invalid priority 'urgent'"):
+        store.add("Write report", "urgent")
+
+    assert store.load() == []
+
+
+def test_load_defaults_priority_for_tasks_saved_without_it(store):
+    store.path.write_text(
+        json.dumps([{"id": 1, "title": "Write report", "done": True}]),
+        encoding="utf-8",
+    )
+
+    assert store.load() == [
+        Task(id=1, title="Write report", done=True, priority="medium")
+    ]
 
 
 def test_cli_add_and_list(tmp_path, capsys):
@@ -102,8 +142,32 @@ def test_cli_add_and_list(tmp_path, capsys):
     assert main(["--file", path, "list"]) == 0
 
     output = capsys.readouterr().out
-    assert "Added task 1: Write report" in output
-    assert "[ ]  Write report" in output
+    assert "Added task 1: Write report (medium)" in output
+    assert "[ ]  Write report  (medium)" in output
+
+
+def test_cli_add_with_priority(tmp_path, capsys):
+    path = str(tmp_path / "tasks.json")
+
+    assert main(["--file", path, "add", "Write report", "--priority", "high"]) == 0
+    main(["--file", path, "list"])
+
+    output = capsys.readouterr().out
+    assert "Added task 1: Write report (high)" in output
+    assert "[ ]  Write report  (high)" in output
+
+
+def test_cli_rejects_invalid_priority(tmp_path, capsys):
+    path = tmp_path / "tasks.json"
+
+    exit_code = main(
+        ["--file", str(path), "add", "Write report", "--priority", "urgent"]
+    )
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "Invalid priority 'urgent'. Choose one of: low, medium, high" in error
+    assert not path.exists()
 
 
 def test_cli_list_when_empty(tmp_path, capsys):

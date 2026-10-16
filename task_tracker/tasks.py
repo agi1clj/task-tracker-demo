@@ -6,6 +6,9 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+PRIORITIES = ("low", "medium", "high")
+DEFAULT_PRIORITY = "medium"
+
 
 class TaskNotFoundError(Exception):
     """Raised when no task exists with the requested id."""
@@ -20,6 +23,7 @@ class Task:
     id: int
     title: str
     done: bool = False
+    priority: str = DEFAULT_PRIORITY
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -30,6 +34,7 @@ class Task:
             id=int(data["id"]),
             title=str(data["title"]),
             done=bool(data.get("done", False)),
+            priority=str(data.get("priority", DEFAULT_PRIORITY)),
         )
 
 
@@ -52,13 +57,18 @@ class TaskStore:
             json.dump([task.to_dict() for task in tasks], file, indent=2)
             file.write("\n")
 
-    def add(self, title: str) -> Task:
+    def add(self, title: str, priority: str = DEFAULT_PRIORITY) -> Task:
         title = title.strip()
         if not title:
             raise ValueError("Task title cannot be empty")
+        priority = priority.strip().lower()
+        if priority not in PRIORITIES:
+            raise ValueError(
+                f"Invalid priority '{priority}'. Choose one of: {', '.join(PRIORITIES)}"
+            )
         tasks = self.load()
         next_id = max((task.id for task in tasks), default=0) + 1
-        task = Task(id=next_id, title=title)
+        task = Task(id=next_id, title=title, priority=priority)
         tasks.append(task)
         self.save(tasks)
         return task

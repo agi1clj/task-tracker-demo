@@ -5,7 +5,13 @@ from __future__ import annotations
 import argparse
 import sys
 
-from task_tracker.tasks import Task, TaskNotFoundError, TaskStore
+from task_tracker.tasks import (
+    DEFAULT_PRIORITY,
+    PRIORITIES,
+    Task,
+    TaskNotFoundError,
+    TaskStore,
+)
 
 DEFAULT_FILE = "tasks.json"
 
@@ -24,6 +30,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     add_parser = subparsers.add_parser("add", help="add a new task")
     add_parser.add_argument("title", help="title of the task")
+    add_parser.add_argument(
+        "--priority",
+        default=DEFAULT_PRIORITY,
+        help=(
+            f"priority of the task: {', '.join(PRIORITIES)} "
+            f"(default: {DEFAULT_PRIORITY})"
+        ),
+    )
 
     subparsers.add_parser("list", help="list all tasks")
 
@@ -38,7 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def format_task(task: Task) -> str:
     status = "x" if task.done else " "
-    return f"{task.id:>3}  [{status}]  {task.title}"
+    return f"{task.id:>3}  [{status}]  {task.title}  ({task.priority})"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -47,8 +61,8 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.command == "add":
-            task = store.add(args.title)
-            print(f"Added task {task.id}: {task.title}")
+            task = store.add(args.title, args.priority)
+            print(f"Added task {task.id}: {task.title} ({task.priority})")
         elif args.command == "list":
             tasks = store.load()
             if not tasks:
