@@ -35,6 +35,7 @@ This installs the `task-tracker` command into the virtual environment.
 
 ```bash
 task-tracker add "Buy groceries"
+task-tracker add "Pay rent" --priority high
 task-tracker list
 task-tracker done 1
 task-tracker delete 1
@@ -42,10 +43,13 @@ task-tracker delete 1
 
 | Command | Description |
 | --- | --- |
-| `add TITLE` | Add a new task |
+| `add TITLE [--priority low\|medium\|high]` | Add a new task (priority defaults to `medium`) |
 | `list` | Show all tasks |
 | `done ID` | Mark a task as completed |
 | `delete ID` | Remove a task |
+
+Priorities are `low`, `medium`, or `high`. Any other value is rejected with an
+error. Tasks saved by older versions, which have no priority, are shown as `medium`.
 
 Run `task-tracker --help` or `task-tracker <command> --help` for details.
 
@@ -53,17 +57,17 @@ Run `task-tracker --help` or `task-tracker <command> --help` for details.
 
 ```console
 $ task-tracker add "Read chapter 3"
-Added task 1: Read chapter 3
-$ task-tracker add "Prepare lab report"
-Added task 2: Prepare lab report
-$ task-tracker add "Email project group"
-Added task 3: Email project group
+Added task 1: Read chapter 3 (medium priority)
+$ task-tracker add "Prepare lab report" --priority high
+Added task 2: Prepare lab report (high priority)
+$ task-tracker add "Email project group" --priority low
+Added task 3: Email project group (low priority)
 $ task-tracker done 1
 Completed task 1: Read chapter 3
 $ task-tracker list
-  1  [x]  Read chapter 3
-  2  [ ]  Prepare lab report
-  3  [ ]  Email project group
+  1  [x]  medium  Read chapter 3
+  2  [ ]  high    Prepare lab report
+  3  [ ]  low     Email project group
 $ task-tracker delete 3
 Deleted task 3: Email project group
 ```
