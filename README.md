@@ -35,6 +35,7 @@ This installs the `task-tracker` command into the virtual environment.
 
 ```bash
 task-tracker add "Buy groceries"
+task-tracker add "Pay rent" --priority high
 task-tracker list
 task-tracker done 1
 task-tracker delete 1
@@ -42,7 +43,7 @@ task-tracker delete 1
 
 | Command | Description |
 | --- | --- |
-| `add TITLE` | Add a new task |
+| `add TITLE [--priority LEVEL]` | Add a new task with priority `low`, `medium` or `high` (default: `medium`) |
 | `list` | Show all tasks |
 | `done ID` | Mark a task as completed |
 | `delete ID` | Remove a task |
@@ -54,19 +55,28 @@ Run `task-tracker --help` or `task-tracker <command> --help` for details.
 ```console
 $ task-tracker add "Read chapter 3"
 Added task 1: Read chapter 3
-$ task-tracker add "Prepare lab report"
+$ task-tracker add "Prepare lab report" --priority high
 Added task 2: Prepare lab report
-$ task-tracker add "Email project group"
+$ task-tracker add "Email project group" --priority low
 Added task 3: Email project group
 $ task-tracker done 1
 Completed task 1: Read chapter 3
 $ task-tracker list
-  1  [x]  Read chapter 3
-  2  [ ]  Prepare lab report
-  3  [ ]  Email project group
+  1  [x]  medium  Read chapter 3
+  2  [ ]  high    Prepare lab report
+  3  [ ]  low     Email project group
 $ task-tracker delete 3
 Deleted task 3: Email project group
 ```
+
+An invalid priority is rejected and nothing is saved:
+
+```console
+$ task-tracker add "Water plants" --priority urgent
+Error: Invalid priority 'urgent'. Choose one of: low, medium, high
+```
+
+Tasks saved before priorities existed are loaded with priority `medium`.
 
 ### Where tasks are stored
 
